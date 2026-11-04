@@ -86,7 +86,7 @@ impl RecordHeader {
         use std::sync::atomic::Ordering::Relaxed;
         let _ = self
             .0
-            .fetch_update(Relaxed, Relaxed, |header| Some((header & !mask) | bits));
+            .try_update(Relaxed, Relaxed, |header| Some((header & !mask) | bits));
     }
 
     fn set_holds_image_values(&self, holds_image_values: bool) {
@@ -125,7 +125,7 @@ impl RecordHeader {
         assert!(id.slot() <= InstalledRecordID::MAX_SLOT && id.generation() <= InstalledRecordID::MAX_GENERATION);
         let identity = u64::from(id.slot()) << Self::SLOT_SHIFT | u64::from(id.generation()) << Self::GENERATION_SHIFT;
         self.0
-            .fetch_update(Relaxed, Relaxed, |header| {
+            .try_update(Relaxed, Relaxed, |header| {
                 ((header >> Self::SLOT_SHIFT) & Self::SLOT_MASK == Self::NO_SLOT)
                     .then_some((header & !Self::IDENTITY_MASK) | identity)
             })
